@@ -112,13 +112,15 @@ class Snake:
             self.move()
         return True
 
-    def collision(self, board):
+    def collision(self, board, position=None):
+        if not position:
+            position = self.pos[0]
         for pos in self.pos[1:]:
-            if pos == self.pos[0]:
+            if pos == position:
                 return True
 
-        if self.pos[0][0] < 0 or self.pos[0][1] < 0 or self.pos[0][
-                0] >= board.boundaries or self.pos[0][1] >= board.boundaries:
+        if position[0] < 0 or position[1] < 0 or position[
+                0] >= board.boundaries or position[1] >= board.boundaries:
             return True
 
         return False
