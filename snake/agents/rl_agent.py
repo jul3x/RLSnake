@@ -1,30 +1,30 @@
-import torch #pytorch
+import torch
 import random
-import numpy as np #numpy
-from collections import deque #data structure to store memory
-from snake.game import Snake, Board, Direction
-from .model import Linear_QNet, QTrainer #importing the neural net from step 2
-# from .plot import plot #importing the plotter from step 2
+import numpy as np
+from collections import deque
+from snake.game import Direction
+from .rl.model import Linear_QNet, QTrainer
+from .agent import Agent
 
-MAX_MEMORY = 10_000
+MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
-LR = 0.002 #learning rate
+LEARNING_RATE = 0.002  #learning rate
 
-class RLAgent:
+
+class RLAgent(Agent):
+
     def __init__(self, snake, board):
-        self.n_games = 0
-        self.epsilon = 0  # randomness
-        self.gamma = 0.9  # discount rate
+        self.epsilon = 0
+        self.gamma = 0.9
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(12, 1024, 3) #input size, hidden size, output size
-        self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
-        self.snake = snake
-        self.board = board
+        self.model = Linear_QNet(11, 1024, 3)
+        self.trainer = QTrainer(self.model, lr=LEARNING_RATE, gamma=self.gamma)
         self.score = 0
         self.move = None
         self.state_old = None
+        super().__init__(snake, board)
 
-    def get_state(self):
+    def get_state(self) -> np.array:
         point_l = (self.snake.pos[0][0] - 1, self.snake.pos[0][1])
         point_r = (self.snake.pos[0][0] + 1, self.snake.pos[0][1])
         point_u = (self.snake.pos[0][0], self.snake.pos[0][1] - 1)
@@ -35,41 +35,44 @@ class RLAgent:
         dir_d = self.snake.dir == Direction.DOWN
 
         state = [
-            (dir_r and self.snake.collision(self.board, point_r)) or # Danger straight
-            (dir_l and self.snake.collision(self.board, point_l)) or
-            (dir_u and self.snake.collision(self.board, point_u)) or
-            (dir_d and self.snake.collision(self.board, point_d)),
+            # Danger straight
+            (dir_r and self.snake.collision(self.board, point_r))
+            or (dir_l and self.snake.collision(self.board, point_l))
+            or (dir_u and self.snake.collision(self.board, point_u))
+            or (dir_d and self.snake.collision(self.board, point_d)),
 
-            (dir_u and self.snake.collision(self.board, point_r)) or # Danger right
-            (dir_d and self.snake.collision(self.board, point_l)) or
-            (dir_l and self.snake.collision(self.board, point_u)) or
-            (dir_r and self.snake.collision(self.board, point_d)),
+            # Danger right
+            (dir_u and self.snake.collision(self.board, point_r))
+            or (dir_d and self.snake.collision(self.board, point_l))
+            or (dir_l and self.snake.collision(self.board, point_u))
+            or (dir_r and self.snake.collision(self.board, point_d)),
 
-            (dir_d and self.snake.collision(self.board, point_r)) or # Danger left
-            (dir_u and self.snake.collision(self.board, point_l)) or
-            (dir_r and self.snake.collision(self.board, point_u)) or
-            (dir_l and self.snake.collision(self.board, point_d)),
+            # Danger left
+            (dir_d and self.snake.collision(self.board, point_r))
+            or (dir_u and self.snake.collision(self.board, point_l))
+            or (dir_r and self.snake.collision(self.board, point_u))
+            or (dir_l and self.snake.collision(self.board, point_d)),
 
-            dir_l, #direction
+            # Movement direction
+            dir_l,
             dir_r,
             dir_u,
             dir_d,
 
+            # Food position relative to snake
             self.board.food[0] < self.snake.pos[0][0],
             self.board.food[0] > self.snake.pos[0][0],
             self.board.food[1] < self.snake.pos[0][1],
             self.board.food[1] > self.snake.pos[0][1],
-
-            len(self.snake.pos) / (self.board.boundaries * self.board.boundaries)
         ]
-        return np.array(state, dtype=float)
+        return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.append((state, action, reward, next_state, done))  # popleft if MAX_MEMORY is reached
+        self.memory.append((state, action, reward, next_state, done))
 
     def train_long_memory(self):
         if len(self.memory) > BATCH_SIZE:
-            mini_sample = random.sample(self.memory, BATCH_SIZE)  # list of tuples
+            mini_sample = random.sample(self.memory, BATCH_SIZE)
         else:
             mini_sample = self.memory
 
@@ -82,7 +85,7 @@ class RLAgent:
     def get_action_embedding(self, state):
         self.epsilon = 100 - self.n_games
         final_move = [0, 0, 0]
-        if random.randint(0, 200) < self.epsilon:
+        if random.randint(0, 2000) < self.epsilon:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
@@ -118,7 +121,7 @@ class RLAgent:
                 return Direction.DOWN
         assert False
 
-    def post_action(self, score, is_dead):
+    def post_action(self, score, time_without_score, is_dead):
         if is_dead:
             reward = -10
         elif score > self.score:
@@ -128,7 +131,8 @@ class RLAgent:
 
         self.score = score
         state_new = self.get_state()
-        self.train_short_memory(self.state_old, self.move, reward, state_new, is_dead)
+        self.train_short_memory(self.state_old, self.move, reward, state_new,
+                                is_dead)
         self.remember(self.state_old, self.move, reward, state_new, is_dead)
 
     def post_game_over(self, record):
@@ -136,5 +140,3 @@ class RLAgent:
         self.train_long_memory()
         if self.score > record:
             self.model.save()
-
-        print('Game', self.n_games, 'Score', self.score, 'Record:', record)

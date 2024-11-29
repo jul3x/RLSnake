@@ -1,10 +1,10 @@
 from snake.game import Direction
+from .agent import Agent
 
 
-class AwareBot:
+class AwareBot(Agent):
     def __init__(self, snake, board):
-        self.snake = snake
-        self.board = board
+        super().__init__(snake, board)
 
     def get_action(self):
         diff_x = self.board.food[0] - self.snake.pos[0][0]
@@ -26,6 +26,5 @@ class AwareBot:
             else:
                 direction = Direction.RIGHT if diff_x > 0 else Direction.LEFT
 
-        print(direction)
-
         return direction
+

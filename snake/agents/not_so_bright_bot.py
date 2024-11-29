@@ -1,11 +1,11 @@
 import random
 from snake.game import Direction
+from .agent import Agent
 
 
-class NotSoBrightBot:
+class NotSoBrightBot(Agent):
     def __init__(self, snake, board):
-        self.snake = snake
-        self.board = board
+        super().__init__(snake, board)
 
     def get_action(self):
         direction = random.choices(list(Direction))

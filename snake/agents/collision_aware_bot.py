@@ -1,12 +1,12 @@
 from copy import deepcopy
 from snake.game import Direction
+from .agent import Agent
 
 
-class CollisionAwareBot:
+class CollisionAwareBot(Agent):
 
     def __init__(self, snake, board):
-        self.snake = snake
-        self.board = board
+        super().__init__(snake, board)
 
     def get_action(self):
         diff_x = self.board.food[0] - self.snake.pos[0][0]

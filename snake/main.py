@@ -1,7 +1,7 @@
 import pygame
 import argparse
 from snake.game import WIDTH, HEIGHT, WHITE, Snake, Board
-from snake.agents import RLAgent, CollisionAwareBot, AwareBot, Human, NotSoBrightBot, AgentType
+from snake.agents import AgentType
 
 if __name__ == "__main__":
     pygame.init()
@@ -9,32 +9,26 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Snake Game")
     clock = pygame.time.Clock()
-    FPS = 500
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--type',
                         default=AgentType.HUMAN,
                         type=AgentType,
                         choices=[t.value for t in AgentType])
+    parser.add_argument('--fps', default=30, type=int)
+    parser.add_argument('--n-games', default=1, type=int)
     args = parser.parse_args()
 
     max_score = 0
 
     agent = None
-    snake = None
-    board = None
-    if args.type == AgentType.HUMAN:
-        agent = Human(snake, board)
-    elif args.type == AgentType.NOT_SO_BRIGHT:
-        agent = NotSoBrightBot(snake, board)
-    elif args.type == AgentType.AWARE:
-        agent = AwareBot(snake, board)
-    elif args.type == AgentType.COLLISION_AWARE:
-        agent = CollisionAwareBot(snake, board)
-    elif args.type == AgentType.RL_TRAIN:
-        agent = RLAgent(snake, board)
+    snake = Snake()
+    board = Board()
+    agent = args.type.get_agent_type()(snake, board)
 
-    for i in range(1000):
+    MAX_TIME_WITHOUT_SCORE = 1000  # idle protection
+
+    for i in range(args.n_games):
         board = Board()
         snake = Snake()
         agent.snake = snake
@@ -51,15 +45,17 @@ if __name__ == "__main__":
             if snake.score > score:
                 time_without_score = 0
 
-            if time_without_score >= 10000:
+            if time_without_score >= MAX_TIME_WITHOUT_SCORE:
                 snake.is_dead = True
 
-            agent.post_action(snake.score, snake.is_dead)
+            agent.post_action(snake.score, time_without_score, snake.is_dead)
 
             if snake.is_dead:
                 agent.post_game_over(max_score)
                 max_score = max(snake.score, max_score)
-                print(f'Dead agent: {agent}, score: {snake.score}, max_score: {max_score}')
+                print(
+                    f'Game: {agent.n_games}, Score: {snake.score}, Record: {max_score}'
+                )
                 break
             board.draw(screen)
             snake.draw(screen)
@@ -68,13 +64,13 @@ if __name__ == "__main__":
             if snake.is_dead:
                 score_surface = font.render('Game over', True, WHITE)
             else:
-                score_surface = font.render('Score : ' + str(snake.score), True,
+                score_surface = font.render(f'Score: {snake.score}', True,
                                             WHITE)
             score_rect = score_surface.get_rect()
             score_rect.topleft = (10, 10)
             screen.blit(score_surface, score_rect)
 
             pygame.display.update()
-            # clock.tick(FPS)
+            clock.tick(args.fps)
 
-    print(f'Max score for {agent} is {max_score}')
+    print(f'Max score for {args.type} is {max_score}')

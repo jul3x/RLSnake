@@ -1,11 +1,12 @@
 import pygame
 from snake.game import Direction
+from .agent import Agent
 
 
-class Human:
+class Human(Agent):
+
     def __init__(self, snake, board):
-        self.snake = snake
-        self.board = board
+        super().__init__(snake, board)
 
     def get_action(self):
         direction = None
