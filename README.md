@@ -1,11 +1,10 @@
 # RLSnake
 
+![Interesting results with reinforcement learning](https://github.com/jul3x/RLSnake/blob/master/rl_snake.gif)
+
 ## Intro
 
 Simple snake game playable by human and other types of implemented bots (including RLAgent).
-
-![Interesting results with reinforcement learning](https://github.com/jul3x/RLSnake/blob/master/rl_snake.gif)
-
 
 ## Purpose
 
