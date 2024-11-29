@@ -1,4 +1,4 @@
-# RL-Snake
+# RLSnake
 
 ## Intro
 
@@ -6,8 +6,8 @@ Simple snake game playable by human and other types of implemented bots (includi
 
 ## Purpose
 
-I wanted to dive a lil bit into Reinforcement Learning world to check possibilities of learning agents on my own.
-And I have never ever created a Snake game so - additional plus for that.
+I wanted to dive a lil bit into Reinforcement Learning world to check possibilities of unsupervised learning agents on my own.
+...nd I have never ever created a Snake game so, why not?
 
 ## Agents
 
@@ -33,15 +33,16 @@ Agent uses NN with 11, 1024 and 3 neurons in each layer. Input state is describe
 * Food is on the north,
 * Food is on the south.
 
-This is pretty standard input vector for the Snake RL agent. I experimented with other types of vectors such as (I must point that I have no theoretical background on the topic whatsoever):
+This is pretty standard input vector for the Snake RL agent.
+I experimented with other types of vectors such as (I must point that I have no theoretical background on the topic whatsoever):
 
 * Additional dimension for current length of the snake - I didn't see any improvement in agent's behaviour.
 * Whole board state embedded into vector of HEIGHT_X * HEIGHT_Y size with values: 
-  ** 0 - blank,
-  ** 1 - snake cell, 
-  ** 2, 3, 4, 5 - snake head rotated to east, west, north, south direction,
-  ** 6 - food,
-  ** 7 - food covered by snake cell. 
+  * 0 - blank,
+  * 1 - snake cell, 
+  * 2, 3, 4, 5 - snake head rotated to east, west, north, south direction,
+  * 6 - food,
+  * 7 - food covered by snake cell. 
   
   This approach failed - possibly because of too short training time.
 
