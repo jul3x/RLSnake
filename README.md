@@ -4,6 +4,9 @@
 
 Simple snake game playable by human and other types of implemented bots (including RLAgent).
 
+![Interesting results with reinforcement learning](https://github.com/jul3x/RLSnake/rl_snake.webm)
+
+
 ## Purpose
 
 I wanted to dive a lil bit into Reinforcement Learning world to check possibilities of unsupervised learning agents on my own.

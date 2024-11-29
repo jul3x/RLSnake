@@ -36,6 +36,10 @@ if __name__ == "__main__":
 
         time_without_score = 0
         while True:
+            if not args.type != AgentType.HUMAN:
+                for event in pygame.event.get():
+                    pass
+
             direction = agent.get_action()
             score = snake.score
             if not snake.is_dead:
